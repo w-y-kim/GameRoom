@@ -13,6 +13,8 @@ import javax.swing.table.TableColumnModel;
 
 import bingo.client.BingoGameClient;
 import bingo.data.Data;
+import bingo.data.GameInfo;
+import bingo.server.countThread;
 
 import java.awt.Color;
 import javax.swing.SpringLayout;
@@ -25,6 +27,7 @@ import javax.swing.JButton;
 import java.awt.GridLayout;
 import javax.swing.JTable;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.awt.event.ActionEvent;
 import javax.swing.JProgressBar;
 import java.awt.FlowLayout;
@@ -51,6 +54,26 @@ public class GameRoomUI extends JFrame implements ActionListener {
 	private Data data;
 	public static DefaultTableModel tm;
 	private JLabel gameTitle, gameUser;
+	private JProgressBar progressBar;
+	private JLabel label;
+	private GameInfo info = new GameInfo();
+	private String[][] bingoKeywords = new String[5][5];
+
+	public JLabel getLabel() {
+		return label;
+	}
+
+	public void setLabel(JLabel label) {
+		this.label = label;
+	}
+
+	public JProgressBar getProgressBar() {
+		return progressBar;
+	}
+
+	public void setProgressBar(JProgressBar progressBar) {
+		this.progressBar = progressBar;
+	}
 
 	public void setGameTitle(String Title) {
 		this.gameTitle.setText(Title);
@@ -87,7 +110,8 @@ public class GameRoomUI extends JFrame implements ActionListener {
 				출력카드_패널.add(txt[i][j]);
 
 				txt[i][j].setLayout(layout);
-
+				// FIXME 테스트코드
+				txt[i][j].setText(Integer.toString((int) (Math.random() * 25) + 1));
 			}
 		}
 		빙고패널.add(출력카드_패널, "name_1035154256703222");
@@ -103,10 +127,10 @@ public class GameRoomUI extends JFrame implements ActionListener {
 				btn[i][j].setFocusPainted(false);
 
 				btn[i][j].setFocusable(false);
-				btn[i][j].setBackground(Color.BLACK);
-				btn[i][j].setForeground(Color.WHITE);
 
 				btn[i][j].setLayout(layout);
+
+				btn[i][j].addActionListener(this);
 			}
 		}
 		빙고패널.add(입력카드_패널, "name_1035168885640309");
@@ -120,6 +144,21 @@ public class GameRoomUI extends JFrame implements ActionListener {
 		나가기.setFocusable(false);
 		나가기.setBackground(Color.WHITE);
 		나가기.setForeground(Color.BLACK);
+
+		progressBar.setMinimum(0); // 진행바 최소값 설정
+		progressBar.setMaximum(10); // 진행바 최대값 설정
+		// progressBar.setStringPainted(true); // 진행사항 퍼센티지로 보여주기 설정
+		progressBar.setForeground(Color.DARK_GRAY); // 진행바 색설정
+
+		progressBar.setForeground(Color.BLACK);
+		progressBar.setBorderPainted(true); // 경계선 표시 설정
+		// progressBar.setIndeterminate(true); // 진행이 안될때 모습 표시
+		progressBar.setStringPainted(true);
+
+		// FIXME 테스트코드
+		countThread ct = new countThread();
+		Thread t = new Thread(ct);
+		t.start();
 	}
 
 	public void cleartxt() {
@@ -136,6 +175,8 @@ public class GameRoomUI extends JFrame implements ActionListener {
 			for (int j = 0; j < 5; j++) {
 				String str = txt[i][j].getText();
 				btn[i][j].setText(str);
+				btn[i][j].setBackground(Color.BLACK);
+				btn[i][j].setForeground(Color.WHITE);
 
 			}
 		}
@@ -148,7 +189,35 @@ public class GameRoomUI extends JFrame implements ActionListener {
 
 			startBtn();// 필드 텍스트 버튼 복사
 			cleartxt();// 필드 텍스트 지우기
-			layout.previous(빙고패널);
+			// layout.previous(빙고패널);
+			layout.next(빙고패널);
+
+			// 버튼 정보 추출
+			for (int i = 0; i < 5; i++) {
+				for (int j = 0; j < 5; j++) {
+					if (e.getSource() == btn[i][j]) {
+						btn[i][j].setBackground(Color.YELLOW);
+						btn[i][j].setForeground(Color.BLACK);
+						// 버튼의 텍스트를 게임인포로 만들어 데이터에 담아 서버로 보냄
+						String keyword = btn[i][j].getText();// 누른 버튼의 값
+						bingoKeywords[i][j] = keyword;// 배열생성 이제 버튼ㅂㅂ
+					}
+				}
+			} // for
+			info.setBingoKeywords(bingoKeywords);
+
+			// 최초 방을 열은 방장의 경우 data 생성필요
+			if (data == null) {
+				Data data = new Data(Data.GAME_READY);
+			} else {
+				Data data = this.data;
+				data.setCommand(Data.GAME_READY);
+			} // 유저정보정도는 들어있겠지머...make랑 join에서 보내줌, 특히 조인에서는 sharedata
+			data.setGameInfo(info);
+
+			bm.sendData(data);
+
+			완료.setEnabled(false);// 버튼 불활성화
 
 		} else if (e.getSource() == 나가기) {// 방장나가면 방 없어지도록 하자, 데이터는 make에서 오는거고
 			this.frame.setVisible(false);
@@ -165,6 +234,27 @@ public class GameRoomUI extends JFrame implements ActionListener {
 			GameLobbyUI.getInstance().frame.setVisible(true);
 
 		}
+
+		// 빙고버튼
+		for (int i = 0; i < 5; i++) {
+			for (int j = 0; j < 5; j++) {
+				if (e.getSource() == btn[i][j]) {
+					btn[i][j].setBackground(Color.YELLOW);
+					btn[i][j].setForeground(Color.BLACK);
+
+					// 버튼의 텍스트를 게임인포로 만들어 데이터에 담아 서버로 보냄
+					String keyword = btn[i][j].getText();// 누른 버튼의 값
+					bingoKeywords[i][j] = keyword;
+
+					info.setBingoKeywords(bingoKeywords);
+
+					data.setCommand(Data.SEND_BINGO_DATA);
+					data.setGameInfo(info);
+
+					bm.sendData(data);
+				}
+			}
+		} // for
 	}
 
 	public static void tableCellAlign() {
@@ -220,6 +310,7 @@ public class GameRoomUI extends JFrame implements ActionListener {
 
 		tm = new DefaultTableModel(null, new String[] { "차례", "ID", "상태", "빙고" });
 		JTable table = new JTable();
+		table.setEnabled(false);
 		table.setModel(tm);
 		table.getColumnModel().getColumn(0).setPreferredWidth(35);
 		table.getColumnModel().getColumn(1).setPreferredWidth(100);
@@ -233,7 +324,7 @@ public class GameRoomUI extends JFrame implements ActionListener {
 		JLabel lblNewLabel = new JLabel("빙고");
 		lblNewLabel.setFont(new Font("나눔고딕", Font.BOLD, 15));
 
-		JLabel label = new JLabel("00초");
+		label = new JLabel("00초");
 		label.setForeground(new Color(178, 34, 34));
 		label.setFont(new Font("나눔고딕 ExtraBold", Font.BOLD, 54));
 
@@ -251,7 +342,7 @@ public class GameRoomUI extends JFrame implements ActionListener {
 
 		JScrollPane scrollPane_2 = new JScrollPane(table);
 
-		JProgressBar progressBar = new JProgressBar();
+		progressBar = new JProgressBar();
 		GroupLayout gl_panel_2 = new GroupLayout(panel_2);
 		gl_panel_2.setHorizontalGroup(gl_panel_2.createParallelGroup(Alignment.TRAILING)
 				.addGroup(gl_panel_2.createSequentialGroup().addGroup(gl_panel_2.createParallelGroup(Alignment.LEADING)

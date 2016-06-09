@@ -179,6 +179,7 @@ public class BingoGameServerThread implements Runnable {
 					System.out.println("방주인1:"+host_user_join);
 					System.out.println("방주인2:"+ho_user2);
 					
+					foundRoom.setHostID(host_user_join.getId());
 					
 					int num = 1;// 방장포함,최소1
 					foundRoom.setNowUserNum(num++);// 방금입장

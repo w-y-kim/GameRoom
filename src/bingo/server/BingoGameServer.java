@@ -19,6 +19,7 @@ import javax.swing.JTextArea;
 import javax.swing.LayoutStyle.ComponentPlacement;
 
 import bingo.data.User;
+import java.awt.Window.Type;
 
 public class BingoGameServer implements Runnable {
 
@@ -99,6 +100,7 @@ public class BingoGameServer implements Runnable {
 	 */
 	private void initialize() {
 		frame = new JFrame();
+		frame.setType(Type.UTILITY);
 		frame.getContentPane().setBackground(Color.LIGHT_GRAY);
 		frame.setBounds(100, 100, 402, 314);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

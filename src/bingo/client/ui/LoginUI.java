@@ -43,6 +43,8 @@ public class LoginUI extends JFrame implements ActionListener {
 		button.addActionListener(this);
 		입장버튼.addActionListener(this);
 		로그인버튼.addActionListener(this);
+		
+		System.out.println("로그인GUI 로딩");
 	}
 
 	{// 초기화블록
@@ -99,7 +101,7 @@ public class LoginUI extends JFrame implements ActionListener {
 				|| e.getSource() == 로그인버튼 && textField.getText().equals("") == false) {// 입장
 
 			bm = new BingoGameClient();
-			System.out.println(bm.hashCode() + "로그인에서 bm값인데 이게 로비와 일치하나?");
+//			System.out.println(bm.hashCode() + "로그인에서 bm값인데 이게 로비와 일치하나?");
 			String id = textField.getText();
 			User user = new User(id, User.NORMAL_PRIVILEGE);
 			data = new Data(Data.LOGIN);

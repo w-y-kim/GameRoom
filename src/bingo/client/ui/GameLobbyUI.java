@@ -42,7 +42,7 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 
 public class GameLobbyUI extends JFrame implements ActionListener {
-	JFrame frame;
+	public JFrame frame;
 	private JPanel panel;
 	private JLabel lblNewLabel_1;
 	private JList list;
@@ -131,7 +131,7 @@ public class GameLobbyUI extends JFrame implements ActionListener {
 			}
 
 		});
-
+		System.out.println("로비GUI 입장");
 	}
 
 	public static void tableCellAlign(){
