@@ -79,8 +79,13 @@ public class MakeRoomUI extends JFrame implements ActionListener {
 				//포장
 //				data.setCommand(Data.MAKE_ROOM);//커맨드
 				data = new Data(Data.MAKE_ROOM);
+				User user = GameLobbyUI.getInstance().getUser();
+				user.setRoom(room);
+				user.getRoom().setRoomID(id);//게임 레디에서 쓸 데이터 
+				GameRoomUI.getInstance().setGamehost(user);//방장정보 저장,레디 방아이디 꺼내서 사용  
+				
 				data.setGameRoom(room);// 방정보 저장(서버에서 사용)
-				data.setUser(GameLobbyUI.getInstance().getUser());
+				data.setUser(user);
 				
 				// 게임방객체생성, 데이터에 저장해줘야함
 				data.getGameRoom().setNowUserNum(1);//인원 변경 

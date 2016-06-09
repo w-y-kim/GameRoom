@@ -29,10 +29,7 @@ public class countThread implements Runnable {
 	public countThread() {
 
 		Thread t = new Thread(this);
-		t.start();
+//		t.start();
 	}
 
-	public static void main(String[] args) {
-		new countThread();
-	}
 }

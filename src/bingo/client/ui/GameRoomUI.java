@@ -14,6 +14,7 @@ import javax.swing.table.TableColumnModel;
 import bingo.client.BingoGameClient;
 import bingo.data.Data;
 import bingo.data.GameInfo;
+import bingo.data.User;
 import bingo.server.countThread;
 
 import java.awt.Color;
@@ -56,8 +57,20 @@ public class GameRoomUI extends JFrame implements ActionListener {
 	private JLabel gameTitle, gameUser;
 	private JProgressBar progressBar;
 	private JLabel label;
-	private GameInfo info = new GameInfo();
 	private String[][] bingoKeywords = new String[5][5];
+	private GameInfo info;
+	private User gamehost;
+	private Thread t;
+	
+	
+	
+	public User getGamehost() {
+		return gamehost;
+	}
+
+	public void setGamehost(User gamehost) {
+		this.gamehost = gamehost;
+	}
 
 	public JLabel getLabel() {
 		return label;
@@ -157,8 +170,14 @@ public class GameRoomUI extends JFrame implements ActionListener {
 
 		// FIXME 테스트코드
 		countThread ct = new countThread();
-		Thread t = new Thread(ct);
-		t.start();
+	}
+
+	public Thread getT() {
+		return t;
+	}
+
+	public void setT(Thread t) {
+		this.t = t;
 	}
 
 	public void cleartxt() {
@@ -191,8 +210,15 @@ public class GameRoomUI extends JFrame implements ActionListener {
 			cleartxt();// 필드 텍스트 지우기
 			// layout.previous(빙고패널);
 			layout.next(빙고패널);
+			 info = new GameInfo();
+			 User now_user = GameLobbyUI.getInstance().getUser(); 
+			 //TODO 현사용자가 들어간 방에 대한 정보 방 id 라던가 .. 
+			// now_user.setRoom(room);
 
-			// 버튼 정보 추출
+			 info.setUser(now_user);//현재사용자정보 저장 
+			 
+			
+			 // 버튼 정보 추출
 			for (int i = 0; i < 5; i++) {
 				for (int j = 0; j < 5; j++) {
 					if (e.getSource() == btn[i][j]) {
@@ -208,13 +234,14 @@ public class GameRoomUI extends JFrame implements ActionListener {
 
 			// 최초 방을 열은 방장의 경우 data 생성필요
 			if (data == null) {
-				Data data = new Data(Data.GAME_READY);
+				data = new Data(Data.GAME_READY);
+				System.out.println("조이너가 못받아 와 왜? : "+data);//창을 리스너에서 여는게 아닌듯
 			} else {
-				Data data = this.data;
+				data = this.data;
 				data.setCommand(Data.GAME_READY);
-			} // 유저정보정도는 들어있겠지머...make랑 join에서 보내줌, 특히 조인에서는 sharedata
+				System.out.println("방장의 경우 : "+ data);
+			}
 			data.setGameInfo(info);
-
 			bm.sendData(data);
 
 			완료.setEnabled(false);// 버튼 불활성화
@@ -251,7 +278,7 @@ public class GameRoomUI extends JFrame implements ActionListener {
 					data.setCommand(Data.SEND_BINGO_DATA);
 					data.setGameInfo(info);
 
-					bm.sendData(data);
+					bm.sendData(data);//FIXME 
 				}
 			}
 		} // for
