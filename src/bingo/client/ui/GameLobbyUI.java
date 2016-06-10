@@ -118,7 +118,6 @@ public class GameLobbyUI extends JFrame implements ActionListener {
 
 					GameRoom selRoom = new GameRoom(roomId,"","",0);//어차피 서버에서 찾음, 여기서는 클릭한 아이디만 넘김
 //					selRoom.addUser(user);//참여자정보저장 , 게임룸의 2종류 변수에 저장해주는 역할
-					
 					selRoom.setRoomID(roomId);
 					user.setRoom(selRoom);//레디에서 쓰기 위함 
 
@@ -129,6 +128,7 @@ public class GameLobbyUI extends JFrame implements ActionListener {
 //					data.setGameRoom(joinRoom);
 					// GameRoomUI.getInstance();//기존 게임방입장, 서버에서 검색해서 리스너에서
 					// 해야할듯?
+//					GameRoomUI.getInstance().setData(data);
 					GameRoomUI.getInstance().setBm(bm);//조인한 사람도 방에서 스트림 보내야져 
 					
 					bm.sendData(data);// 클릭한 방번호가 조인으로 전달됨

@@ -49,6 +49,7 @@ public class LoginUI extends JFrame implements ActionListener {
 
 	{// 초기화블록
 		frame = new JFrame();
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setType(Type.UTILITY);
 		frame.setTitle("로그인창");
 		로그인버튼 = new JButton("빙고게임 로그인");
@@ -114,11 +115,12 @@ public class LoginUI extends JFrame implements ActionListener {
 
 			// synchronized(this){//TODO 이거 해줘야하지 않을까?
 			
-			
+			synchronized(this){
 			GameLobbyUI.getInstance().idlbl.setText("ID : " + id);
 			GameLobbyUI.getInstance().setBm(this.bm);//이렇게만 하면 user 정보가 제대로 가지 않고 계속 갱신되는 문제
+			
 			GameLobbyUI.getInstance().setUser(user);
-			// }
+			 }
 			// this.frame.setVisible(false);//일단 감추자
 
 			this.frame.dispose();

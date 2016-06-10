@@ -7,6 +7,7 @@ import java.awt.Font;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.LayoutStyle.ComponentPlacement;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumnModel;
@@ -16,6 +17,7 @@ import bingo.data.Data;
 import bingo.data.GameInfo;
 import bingo.data.User;
 import bingo.server.countThread;
+import javafx.scene.input.KeyCode;
 
 import java.awt.Color;
 import javax.swing.SpringLayout;
@@ -23,12 +25,17 @@ import javax.swing.SwingConstants;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.JTextArea;
+
+import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import javax.swing.JButton;
 import java.awt.GridLayout;
 import javax.swing.JTable;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.awt.event.ActionEvent;
 import javax.swing.JProgressBar;
 import java.awt.FlowLayout;
@@ -59,17 +66,25 @@ public class GameRoomUI extends JFrame implements ActionListener {
 	private JLabel label;
 	private String[][] bingoKeywords = new String[5][5];
 	private GameInfo info;
-	private User gamehost;
 	private Thread t;
-	
-	
-	
-	public User getGamehost() {
-		return gamehost;
+	private JTextArea textArea_1;
+	private static JTable table;
+	private String nowRoomID;
+
+	public String getNowRoomID() {
+		return nowRoomID;
 	}
 
-	public void setGamehost(User gamehost) {
-		this.gamehost = gamehost;
+	public void setNowRoomID(String nowRoomID) {
+		this.nowRoomID = nowRoomID;
+	}
+
+	public JTextArea getTextArea_1() {
+		return textArea_1;
+	}
+
+	public void setTextArea_1(JTextArea textArea_1) {
+		this.textArea_1 = textArea_1;
 	}
 
 	public JLabel getLabel() {
@@ -169,7 +184,7 @@ public class GameRoomUI extends JFrame implements ActionListener {
 		progressBar.setStringPainted(true);
 
 		// FIXME 테스트코드
-		countThread ct = new countThread();
+
 	}
 
 	public Thread getT() {
@@ -210,15 +225,14 @@ public class GameRoomUI extends JFrame implements ActionListener {
 			cleartxt();// 필드 텍스트 지우기
 			// layout.previous(빙고패널);
 			layout.next(빙고패널);
-			 info = new GameInfo();
-			 User now_user = GameLobbyUI.getInstance().getUser(); 
-			 //TODO 현사용자가 들어간 방에 대한 정보 방 id 라던가 .. 
+			info = new GameInfo();
+			User now_user = GameLobbyUI.getInstance().getUser();
+			// TODO 현사용자가 들어간 방에 대한 정보 방 id 라던가 ..
 			// now_user.setRoom(room);
 
-			 info.setUser(now_user);//현재사용자정보 저장 
-			 
-			
-			 // 버튼 정보 추출
+			info.setUser(now_user);// 현재사용자정보 저장
+
+			// 버튼 정보 추출
 			for (int i = 0; i < 5; i++) {
 				for (int j = 0; j < 5; j++) {
 					if (e.getSource() == btn[i][j]) {
@@ -232,15 +246,16 @@ public class GameRoomUI extends JFrame implements ActionListener {
 			} // for
 			info.setBingoKeywords(bingoKeywords);
 
-			// 최초 방을 열은 방장의 경우 data 생성필요
-			if (data == null) {
-				data = new Data(Data.GAME_READY);
-				System.out.println("조이너가 못받아 와 왜? : "+data);//창을 리스너에서 여는게 아닌듯
-			} else {
-				data = this.data;
-				data.setCommand(Data.GAME_READY);
-				System.out.println("방장의 경우 : "+ data);
-			}
+			// 최초 방을 열은 방장의 경우 data 생성필요 -> 아니다 방장은 셋해서 던져줌
+			// if (data == null) {
+			// data = new Data(Data.GAME_READY);
+			// System.out.println("조이너가 못받아 와 왜? : " + data);// 창을 리스너에서 여는게
+			// // 아닌듯
+			// } else {
+			data = this.data;
+			data.setCommand(Data.GAME_READY);
+			System.out.println("방장의 경우 : " + data);
+			// }
 			data.setGameInfo(info);
 			bm.sendData(data);
 
@@ -278,24 +293,15 @@ public class GameRoomUI extends JFrame implements ActionListener {
 					data.setCommand(Data.SEND_BINGO_DATA);
 					data.setGameInfo(info);
 
-					bm.sendData(data);//FIXME 
+					bm.sendData(data);// FIXME
 				}
 			}
 		} // for
 	}
 
-	public static void tableCellAlign() {
-		DefaultTableCellRenderer Renderer = new DefaultTableCellRenderer();
-		Renderer.setHorizontalAlignment(SwingConstants.CENTER);
-		TableColumnModel tcmSchedule = GameLobbyUI.table.getColumnModel();
-		// DefaultTableCellHeaderRenderer 생성 (가운데 정렬을 위한)
-		for (int i = 0; i < tcmSchedule.getColumnCount(); i++) {
-			tcmSchedule.getColumn(i).setCellRenderer(Renderer);
-		}
-	}
-
 	{// 초기화 블록
 		frame = new JFrame();
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setTitle("게임방");
 		frame.setBounds(100, 100, 709, 575);
 
@@ -336,7 +342,7 @@ public class GameRoomUI extends JFrame implements ActionListener {
 						.addContainerGap()));
 
 		tm = new DefaultTableModel(null, new String[] { "차례", "ID", "상태", "빙고" });
-		JTable table = new JTable();
+		table = new JTable();
 		table.setEnabled(false);
 		table.setModel(tm);
 		table.getColumnModel().getColumn(0).setPreferredWidth(35);
@@ -429,16 +435,46 @@ public class GameRoomUI extends JFrame implements ActionListener {
 		sl_좌측패널.putConstraint(SpringLayout.NORTH, scrollPane_1, 420, SpringLayout.NORTH, 좌측패널);
 		sl_좌측패널.putConstraint(SpringLayout.WEST, scrollPane_1, 0, SpringLayout.WEST, scrollPane);
 
-		JTextArea textArea_1 = new JTextArea();
-		textArea_1.setEnabled(false);
+		textArea_1 = new JTextArea();
+		textArea_1.setEnabled(true);
+		textArea_1.setRows(5);
 		textArea_1.setEditable(false);
 		scrollPane.setViewportView(textArea_1);
 		sl_좌측패널.putConstraint(SpringLayout.SOUTH, scrollPane_1, -10, SpringLayout.SOUTH, 좌측패널);
 		sl_좌측패널.putConstraint(SpringLayout.EAST, scrollPane_1, 332, SpringLayout.WEST, 좌측패널);
 		좌측패널.add(scrollPane_1);
 
-		JTextArea textArea = new JTextArea();
+		JTextField textArea = new JTextField();
 		scrollPane_1.setViewportView(textArea);
+		// scrollPane_1.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+		// scrollPane_1.add(scrollPane_1, BorderLayout.WEST);
+		// scrollPane_1.getVerticalScrollBar().setValue(scrollPane_1.getVerticalScrollBar().getMaximum());
+
+		// //예제 1
+		// //int 형 변수에 jTextArea 객체의 텍스트의 총 길이를 저장
+		// int pos = textArea_1.getText().length();
+		// //caret 포지션을 가장 마지막으로 맞춤
+		// textArea_1.setCaretPosition(pos);
+		// //갱신
+		// textArea_1 .requestFocus();
+
+		textArea.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent e) {
+				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+					String msg = textArea.getText();
+//					Data data = new Data(Data.CHAT_MESSAGE);
+					data.setCommand(Data.CHAT_MESSAGE);
+//					data.setUser(GameLobbyUI.getInstance().getUser());// 현유저
+					data.getGameRoom().getRoomID();// 조인 시 방 id 들어있음,
+
+					data.setMessage(msg);
+					bm.sendData(data);
+					textArea.setText(null);
+				}
+			}
+
+		});
 
 		빙고패널 = new JPanel();
 		sl_좌측패널.putConstraint(SpringLayout.SOUTH, 빙고패널, -139, SpringLayout.SOUTH, 좌측패널);
@@ -464,5 +500,15 @@ public class GameRoomUI extends JFrame implements ActionListener {
 
 		frame.setVisible(true);
 
+	}
+
+	public static void tableCellAlign() {
+		DefaultTableCellRenderer Renderer = new DefaultTableCellRenderer();
+		Renderer.setHorizontalAlignment(SwingConstants.CENTER);
+		TableColumnModel tcmSchedule = GameRoomUI.table.getColumnModel();
+		// DefaultTableCellHeaderRenderer 생성 (가운데 정렬을 위한)
+		for (int i = 0; i < tcmSchedule.getColumnCount(); i++) {
+			tcmSchedule.getColumn(i).setCellRenderer(Renderer);
+		}
 	}
 }

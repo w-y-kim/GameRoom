@@ -151,6 +151,7 @@ public class BingoGameServer implements Runnable {
 		textArea.setEditable(false);
 		scrollPane.setViewportView(textArea);
 		frame.getContentPane().setLayout(groupLayout);
+		textArea.setCaretPosition(textArea.getDocument().getLength());
 	}
 
 //	public void printEventLog(String message) {

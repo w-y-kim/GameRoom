@@ -214,7 +214,7 @@ public class BingoGameServerThread implements Runnable {
 					this.broadCasting();
 					break;
 				case Data.CHAT_MESSAGE:
-					
+					this.broadCasting();
 					break;
 				case Data.GAME_READY:
 					//방장이 아닌 경우 조인 시 리스너에서 담은 데이터
@@ -224,8 +224,6 @@ public class BingoGameServerThread implements Runnable {
 					//현재 게임
 					User now_user = info.getUser();
 					now_user.setState(User.READY);//준비//FIXME null 
-					GameRoomUI.getInstance().setGamehost(host_user);여기서 호스트를 리스너로 넘겨줘야함 
-//					data.setGameInfo(info);//게임정보{현사용자,버튼의 텍스트 2차원 배열정보, 이미들어있음 }
 					data.setUser(now_user);//현재사용자
 					
 					this.broadCasting();
@@ -235,10 +233,11 @@ public class BingoGameServerThread implements Runnable {
 				case Data.SEND_WINNING_RESULT:
 					break;
 				case Data.SEND_BINGO_DATA: {
-					sendDataRoommate(data.getGameRoom().getRoomID());
+//					sendDataRoommate(data.getGameRoom().getRoomID());
 				}
 					break;
-
+				default : 
+					break;
 				}// switch
 
 			} catch (IOException e) {

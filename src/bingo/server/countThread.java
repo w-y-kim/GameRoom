@@ -10,15 +10,15 @@ public class countThread implements Runnable {
 		// System.out.println(i);
 		// }
 		int i = 0;
-		while (i!=11) {
+		while (i != 11) {
 			try {
-				System.out.println(10-i);
 
-			        GameRoomUI.getInstance().getProgressBar().setValue(i);
-			        GameRoomUI.getInstance().getLabel().setText(10-i+"초");
-//			        System.out.println("랜덤: "+Integer.toString((int) (Math.random()*25)+1));
-			        Thread.sleep(1000);
-			        i++;
+				GameRoomUI.getInstance().getProgressBar().setValue(i);
+				GameRoomUI.getInstance().getLabel().setText(10 - i + "초");
+				// System.out.println("랜덤: "+Integer.toString((int)
+				// (Math.random()*25)+1));
+				Thread.sleep(1000);
+				i++;
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -29,7 +29,7 @@ public class countThread implements Runnable {
 	public countThread() {
 
 		Thread t = new Thread(this);
-//		t.start();
+		// t.start();
 	}
 
 }

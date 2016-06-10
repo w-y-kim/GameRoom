@@ -36,9 +36,8 @@ public class MakeRoomUI extends JFrame implements ActionListener {
 	// public static void main(String[] args) {
 	// new MakeRoomUI();
 	// }
-	private Object[] dataVectors;
 	private Data data;
-	private Calendar time;
+	
 
 	public MakeRoomUI(BingoGameClient bm) {
 		this.bm = bm;
@@ -55,6 +54,7 @@ public class MakeRoomUI extends JFrame implements ActionListener {
 		frame.setVisible(true);
 	}
 
+	
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() == 취소) {// 취소
@@ -69,20 +69,22 @@ public class MakeRoomUI extends JFrame implements ActionListener {
 				frame.setVisible(true);//2번 만들 때 보이도록 
 				//데이터생성 
 				GameLobbyUI.getInstance().frame.setVisible(false);// 창감추기
-				String id = data.getUser().getId();
+				String id = data.getUser().getId() + Calendar.getInstance().getTimeInMillis();
 				String name = textField.getText();
 				String theme = textField_1.getText();
 				String str = ((String) comboBox.getSelectedItem()).substring(0, 1);
 				int max_User_number = Integer.parseInt(str);
-				GameRoom room = new GameRoom(id + Calendar.getInstance().getTimeInMillis(), name, theme, max_User_number);
+				GameRoom room = new GameRoom(id, name, theme, max_User_number);
 
 				//포장
 //				data.setCommand(Data.MAKE_ROOM);//커맨드
 				data = new Data(Data.MAKE_ROOM);
 				User user = GameLobbyUI.getInstance().getUser();
 				user.setRoom(room);
+				
+				user.getRoom().setHostID(user.getId());
 				user.getRoom().setRoomID(id);//게임 레디에서 쓸 데이터 
-				GameRoomUI.getInstance().setGamehost(user);//방장정보 저장,레디 방아이디 꺼내서 사용  
+				user.getRoom().setGamehost(user);
 				
 				data.setGameRoom(room);// 방정보 저장(서버에서 사용)
 				data.setUser(user);
@@ -116,6 +118,7 @@ public class MakeRoomUI extends JFrame implements ActionListener {
 
 	{// 초기화블록
 		frame = new JFrame();
+		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		frame.setTitle("방만들기");
 		frame.setBounds(100, 100, 220, 200);
 		JLabel lblNewLabel = new JLabel("방제목");

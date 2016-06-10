@@ -10,6 +10,7 @@ import java.util.Map.Entry;
 
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
+import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableColumnModel;
@@ -19,6 +20,8 @@ import bingo.data.Data;
 import bingo.data.GameInfo;
 import bingo.data.GameRoom;
 import bingo.data.User;
+import bingo.server.BingoGameServer;
+import bingo.server.countThread;
 
 /**
  * @author user
@@ -38,6 +41,7 @@ public class BingoGameClient extends JFrame implements Runnable {
 	private Data shareData;
 	private String makeHost_id;
 	private boolean isIn;
+	private HashMap<String, User> hm;
 
 	public static void main(String[] args) {
 		// new LoginUI();//GUI에서 로그인을 해야지 소켓이 생성되게 하려면 시작점이 LOGIN GUI
@@ -60,6 +64,7 @@ public class BingoGameClient extends JFrame implements Runnable {
 		} catch (IOException e) {
 			JOptionPane.showMessageDialog(this, "서버를 켜주세요");// GUI에서 하는게 더 나을 듯
 			// e.printStackTrace();
+			System.exit(-1);
 
 		}
 	}
@@ -141,7 +146,7 @@ public class BingoGameClient extends JFrame implements Runnable {
 			GameLobbyUI.dlm.addElement(user);
 		}
 
-		// 테이블 방목록 추가
+		// 로비 테이블 방목록 추가
 		roomList = data.getRoomList();
 		GameLobbyUI.tm.setRowCount(0);
 		for (Entry<String, GameRoom> entry : roomList.entrySet()) {
@@ -150,6 +155,7 @@ public class BingoGameClient extends JFrame implements Runnable {
 			String row[] = { room.getRoomID(), room.getTitle(), room.getTheme(),
 					Integer.toString(room.getMaxUserNum()) };
 			GameLobbyUI.tm.addRow(row);
+			GameLobbyUI.tableCellAlign();
 		}
 		GameLobbyUI.lblNewLabel_2.setText("접속인원 :" + RoomuserList.size() + " 명");
 
@@ -185,7 +191,7 @@ public class BingoGameClient extends JFrame implements Runnable {
 
 		// 방장 //TODO 룸테이블추가 //TODO 룸라벨 갱신 //TODO 로비감추기
 		if (host.getId().equals(data.getUser().getId())) {
-			System.out.println("방장만 실행");
+			System.out.println("방만들기명령+방장만 실행");
 			String id = host.getId();// 로그인 UI에서
 			String state = host.getState();// 로비 GUI에서
 			String[] rowData = { "-", id, state, "-" };
@@ -207,6 +213,7 @@ public class BingoGameClient extends JFrame implements Runnable {
 			String row[] = { room.getRoomID(), room.getTitle(), room.getTheme(),
 					Integer.toString(room.getMaxUserNum()) };
 			GameLobbyUI.tm.addRow(row);
+			GameLobbyUI.tableCellAlign();
 		}
 
 		makeHost_id = data.getUser().getId();// join 시 쓰기 위함
@@ -223,23 +230,36 @@ public class BingoGameClient extends JFrame implements Runnable {
 		User joiner = data.getUser();// 실제 방에 조인한 사람
 		User now_user = GameLobbyUI.getInstance().getUser();// 현사용자
 		isIn = false;
-
+		String myRoomID = "";
 		String host_id = joinRoom.getHostID();
 		HashMap<String, User> userMap = data.getGameRoom().getUserList();
 		boolean check = joiner.getId().equals(now_user.getId());// 조인신청자 확인 변수
 
-		// TODO 방장인 경우
+		System.out.println("조인룸 아이디 " + joinRoom.getRoomID());
 
-		if (host_id.equals(now_user.getId())) {// make한 후 들어온 클라는 아예 이 변수를 모른다.
+		try {
+			myRoomID = now_user.getRoom().getRoomID();
+		} catch (Exception e) {
+			System.out.println("로비있는 애는 널이지만 무시한다.");
+		}
+		
+		if (now_user.getRoom().getRoomID() != null) {
+			// 로비에 있는 애는 당연히 null,
+		}
+
+		System.out.println("마이 룸 아이디 " + myRoomID);
+		boolean check2 = joinRoom.getRoomID().equals(myRoomID);
+
+		// TODO 방장인 경우
+		if (host_id.equals(now_user.getId())) {
 			// 방장의 게임테이블
 			System.out.println("방장 : 조인갱신");
-			this.tableRenew(userMap);
 			now_user.setRoom(joinRoom);
 			// isIn = true;
 		}
 
-		// 조인 신청자만 보임
-		if (check) {
+		// 조인 신청자만 보임, 내가 들어간 방 아이디 vs 조인이벤트 발생한 방 아이디 구분
+		if (check && check2) {
 			GameRoomUI.getInstance().setData(shareData);
 			GameRoomUI.getInstance().setGameTitle("[방제목 : " + joinRoom.getTitle() + "]");
 			GameRoomUI.getInstance().setGameUser("[아이디 : " + joiner.getId() + "]");
@@ -247,28 +267,20 @@ public class BingoGameClient extends JFrame implements Runnable {
 
 			// 조이너의 게임창 테이블 갱신
 			System.out.println("조이너 : 조인갱신");
-			this.tableRenew(userMap);
 			GameLobbyUI.getInstance().frame.setVisible(false);// 조인 시 로비 감추도록
-																// frame없이 하면
-																// 안감춰지더라
 			// 다음 조인할 때 3번째 분기처리 플래그변수
 			isIn = false;
 			joinRoom.setHostID(host_id);// 방장정보 저장
 
 			now_user.setRoom(joinRoom);// 현접자에 현재방저장
+			this.tableRenew(userMap);// 이걸 조건문 밖으로 빼면 다른 방있는 애들도 여기 hm으로 업뎃됨 조심!
+
 		}
 
 		// 뉴조이너는 실행안하게 하고 , 기존 조이너가 해당 방의 정보를 가지고 있는 경우만 (조인할 때 추가해줘야함)
 		// 그지같은 조건... 어쩔 수 없이 방에 들어와 있으면 무조건 실행하도록 함
-		if (joinRoom.getHostID().equals(now_user.getRoom().getHostID())) {// make한
-																			// 후
-																			// 들어온
-																			// 클라는
-																			// 아예
-																			// 이
-																			// 변수를
-																			// 모른다.
-			// 방장의 게임테이블
+		// 근데 이렇게 하니까 방2개 먼저 만들고 들어오면 두번째 방 테이블이 잘못되는 문제
+		if (joinRoom.getHostID().equals(now_user.getRoom().getHostID())) {
 			System.out.println("멤버 : 조인갱신");
 			this.tableRenew(userMap);
 		}
@@ -278,42 +290,76 @@ public class BingoGameClient extends JFrame implements Runnable {
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	private void chatExe() {
-		// TODO Auto-generated method stub
+		String name = data.getUser().getId();// 챗한 사람 아이디
+
+		String eventRoomID = data.getGameRoom().getRoomID();// TODO 채팅이 발생한 방의
+															// 아이디
+		String myRoomID = data.getUser().getRoom().getRoomID();// 내가 들어있는 방의 아이디
+																// , 로비에 있어서
+																// null인 경우는?
+
+		if (myRoomID == null) {// 방에 일단 들어온 사람 중
+
+			if (myRoomID.equals(eventRoomID)) { // 같은 방 있는 경우만. 방의 id로 검색하자
+				String str = data.getMessage();
+				String msg = String.format("[%s]  %s%n", name, str);
+				GameRoomUI.getInstance().getTextArea_1().append(msg);
+				GameRoomUI.getInstance().getTextArea_1()
+						.setCaretPosition(GameRoomUI.getInstance().getTextArea_1().getDocument().getLength());
+			}
+		}
 
 	}
 
 	private void readyExe() {
 
-		// 레디한 녀석들
-		// 레디안한 녀석들
-		// 방밖에 있는 녀석들
+		GameRoom stRoom = data.getGameRoom();
+		// JOptionPane.showMessageDialog(this, stRoom);// 룸정보, 잘 나옴
 		User now_user = data.getUser();// 현재사용자
 		String state = data.getUser().getState();// 상태(준비)
-
 		GameInfo info = data.getGameInfo();// 게임정보{현사용자,버튼의 텍스트 2차원 배열정보, 이미들어있음
 											// }
 		String[][] bingoKeywords = info.getBingoKeyword();
-		// String Keywords = info.getKeyword();//방금 누른 키(이건 게임 시작 이후에나 필요할듯)
 
-		User gameHost = GameRoomUI.getInstance().getGamehost();
-		String roomId = gameHost.getRoom().getRoomID();
-		if (state == User.READY && roomId.equals(now_user.getRoom().getRoomID())) {
-			// 같은 방에 있고 레디한 녀석들
-			JOptionPane.showMessageDialog(this, "준비완료!");
-			GameRoomUI.getInstance().getT().start();//카운트 시작
-			
-		} else if (state != User.READY &&roomId.equals(now_user.getRoom().getRoomID())) {
-			// 같은 방에 있고 레디안한 녀석들 
-			JOptionPane.showMessageDialog(this, "다른 사람이 레디했습니다!");
-		} else if (state != User.READY && now_user.getRoom().getRoomID() == null) {
+		User gameHost = data.getUser().getRoom().getGamehost();// 레디누른 사람
+		String readyRoomId = gameHost.getRoom().getRoomID();// 레디를 한 사람의 방 id
+		String myRoomID = now_user.getRoom().getRoomID();// 현재 내가 들어간 방id , 안들가면
+															// null일 수 있음
+
+		// String hostID = data.getUser().getRoom().getHostID();
+		System.out.println("레디한 사람의 방 id : " + readyRoomId);
+		System.out.println("내가 들어간 방 : " + myRoomID);
+
+		// 내가 들어간 방과 게임호스트의 방이 같은가
+		if (state.equals(User.READY) && readyRoomId.equals(myRoomID)) {
+			hm = stRoom.getUserList();// a
+			now_user.setState(User.DONE);
+			hm.put(now_user.getId(), now_user);
+			// 테이블에 준비상태로 바꾸기
+			JOptionPane.showMessageDialog(null, "준비완료!");
+			this.tableRenew(hm);// 준비완료로 갱신
+			// 게임시작되면 턴인 애한테 줘야할듯한데
+			countThread ct = new countThread();
+			Thread t = new Thread(ct);
+			t.start();// 카운트 시작
+
+			// 상태바꾸기
+
+		} else if (!state.equals(User.READY) == readyRoomId.equals(myRoomID)) {
+			// 같은 방에 있고 레디안한 녀석들
+			hm.put(now_user.getId(), now_user);
+			JOptionPane.showMessageDialog(this, "다른 사람이 레디했습니다! 너도 좀 하세요");
+			this.tableRenew(hm);// 준비완료로 갱신
+		} else if (!state.equals(User.READY) == !readyRoomId.equals(myRoomID)) {
 			// 룸번호가 없고 준비상태가 아닌 녀석들 , 즉 밖에 있는 녀석들
-			
+
 		}
 
 	}
 
 	private void startExe() {
 		// TODO Auto-generated method stub
+		// String Keywords = info.getKeyword();//방금 누른 키(이건 게임 시작 이후에나 필요할듯)
 
 	}
 
@@ -333,6 +379,7 @@ public class BingoGameClient extends JFrame implements Runnable {
 			User user = entry.getValue();
 			String row[] = { "-", user.getId(), user.getState(), "-" };
 			GameRoomUI.tm.addRow(row);
+			GameRoomUI.tableCellAlign();
 		}
 	}
 

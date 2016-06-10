@@ -9,6 +9,7 @@ import java.util.HashMap;
 public class GameRoom implements Serializable {
 	private String roomID;	//방  ID, 방장ID+시스템시간 형식으로 생성
 	private String hostID;//방장 ID 
+	private User gameHost;//방장 객체 , 이걸 이용해서 레디할 때 조건으로 사용 
 	private String title; //방제목
 	private String theme; //빙고주제
 	private int maxUserNum; //최대 플레이어 수
@@ -25,7 +26,13 @@ public class GameRoom implements Serializable {
 		this.theme = theme;
 		this.maxUserNum = maxUserNum;
 	}
+	public User getGamehost() {
+		return gameHost;
+	}
 
+	public void setGamehost(User gamehost) {
+		this.gameHost = gamehost;
+	}
 	public String getTitle() {
 		return title;
 	}
